@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link crossorigin="" href="https://fonts.gstatic.com/" rel="preconnect"/>
+    <link as="style" href="https://fonts.googleapis.com/css2?display=swap&family=Noto+Sans%3Awght%40400%3B500%3B700%3B900&family=Public+Sans%3Awght%40400%3B500%3B600%3B700%3B800&family=Material+Icons" onload="this.rel='stylesheet'" rel="stylesheet"/>
+    <title>Edit Profile - Hostel Clearance System</title>
+    <link href="data:image/x-icon;base64," rel="icon" type="image/x-icon"/>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <style type="text/tailwindcss">
+        @layer base {
+            :root {
+                --color-primary: #1978e5;
+                --color-primary-hover: #135cb3;
+                --color-text-primary: #1a202c;
+                --color-text-secondary: #4a5568;
+                --color-text-muted: #718096;
+                --color-bg-primary: #ffffff;
+                --color-bg-secondary: #f7fafc;
+                --color-border: #e2e8f0;
+            }
+            body {
+                font-family: "Public Sans", "Noto Sans", sans-serif;
+                color: var(--color-text-primary);
+                background-color: var(--color-bg-secondary);
+            }
+            .active-link {
+                color: var(--color-primary);
+                font-weight: 600;
+                position: relative;
+            }
+            .active-link::after {
+                content: '';
+                position: absolute;
+                bottom: -8px;
+                left: 0;
+                width: 100%;
+                height: 2px;
+                background-color: var(--color-primary);
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="relative flex size-full min-h-screen flex-col group/design-root overflow-x-hidden">
+    <div class="layout-container flex h-full grow flex-col">
+        <header class="flex items-center justify-between whitespace-nowrap border-b border-solid border-[var(--color-border)] bg-[var(--color-bg-primary)] px-6 md:px-10 py-4 shadow-sm">
+            <div class="flex items-center gap-3 text-[var(--color-text-primary)]">
+                <div class="size-7 text-[var(--color-primary)]">
+                    <svg fill="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M18 6h-2V4a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2H6a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2zm-8-2h4v2h-4V4zM6 8h12v12H6V8zm6 5.5l-3 3-1-1 4-4 4 4-1 1-3-3z"/>
+                    </svg>
+                </div>
+                <h1 class="text-xl font-semibold leading-tight tracking-tight">Hostel Clearance</h1>
+            </div>
+            <nav class="hidden md:flex items-center gap-8">
+                <a class="text-[var(--color-text-secondary)] hover:text-[var(--color-primary)] text-sm font-medium leading-normal transition-colors" href="{{ url_for('main.dashboard') }}">Dashboard</a>
+                <a class="active-link text-sm font-medium leading-normal" href="{{ url_for('main.student_profile') }}">Profile</a>
+                <a class="text-[var(--color-text-secondary)] hover:text-[var(--color-primary)] text-sm font-medium leading-normal transition-colors" href="{{ url_for('main.hostel_info') }}">Hostel Information</a>
+                <a href="{{ url_for('main.logout') }}" class="text-[var(--color-text-muted)] hover:text-red-600 transition-colors text-sm font-medium leading-normal">Logout</a>
+            </nav>
+            <div class="flex items-center gap-4">
+                <button aria-label="Notifications" class="text-[var(--color-text-muted)] hover:text-[var(--color-primary)] transition-colors relative" onclick="toggleNotifications()">
+                    <span class="material-icons">notifications</span>
+                    {% if student_notifications|length > 0 %}
+                    <span class="absolute -top-1 -right-1 inline-flex items-center justify-center size-5 text-xs font-bold leading-none text-red-100 bg-red-600 rounded-full">
+                        {{ student_notifications|length }}
+                    </span>
+                    {% endif %}
+                </button>
+                <img src="{{ url_for('static', filename='profile_pics/' + (current_user.profile_picture or 'default.jpg')) }}"
+                     alt="Profile Picture"
+                     class="rounded-full size-10 border border-slate-200 object-cover"/>
+            </div>
+            <button class="md:hidden text-[var(--color-text-muted)] hover:text-[var(--color-primary)] transition-colors" id="menuButton">
+                <span class="material-icons text-3xl">menu</span>
+            </button>
+        </header>
+
+        <div id="mobileSidebar" class="fixed top-0 left-0 h-full w-64 bg-white shadow-lg z-50 transform -translate-x-full transition-transform duration-300 md:hidden">
+            <div class="p-4 border-b border-gray-200">
+                <div class="flex items-center justify-between">
+                    <p class="font-semibold text-lg text-[var(--color-text-primary)]">Menu</p>
+                    <button class="text-[var(--color-text-muted)] hover:text-[var(--color-primary)]" onclick="toggleMobileMenu()">
+                        <span class="material-icons">close</span>
+                    </button>
+                </div>
+            </div>
+            <nav class="p-4 space-y-4">
+                <a href="{{ url_for('main.dashboard') }}" class="block text-[var(--color-text-primary)] hover:text-[var(--color-primary)] font-medium">Dashboard</a>
+                <a href="{{ url_for('main.student_profile') }}" class="block text-[var(--color-text-primary)] hover:text-[var(--color-primary)] font-medium">Profile</a>
+                <a href="{{ url_for('main.hostel_info') }}" class="block text-[var(--color-text-primary)] hover:text-[var(--color-primary)] font-medium">Hostel Information</a>
+                <a href="{{ url_for('main.logout') }}" class="block text-[var(--color-text-primary)] hover:text-red-600 font-medium">Logout</a>
+            </nav>
+        </div>
+
+        <div id="notificationDropdown" class="hidden absolute right-4 md:right-10 top-16 mt-2 w-72 bg-white rounded-lg shadow-lg z-50 border border-[var(--color-border)]">
+            <div class="p-4 border-b border-[var(--color-border)]">
+                <h3 class="text-lg font-semibold text-[var(--color-text-primary)]">Notifications</h3>
+            </div>
+            <div class="max-h-60 overflow-y-auto">
+                {% if student_notifications %}
+                    {% for notification in student_notifications %}
+                        <div id="notification-{{ notification.id }}" class="px-4 py-3 border-b last:border-b-0 border-[var(--color-border)] {% if not notification.is_read %}bg-blue-50{% endif %}">
+                            <p class="text-sm text-[var(--color-text-primary)]">{{ notification.message }}</p>
+                            <p class="text-xs text-[var(--color-text-muted)] mt-1">{{ notification.created_at.strftime('%b %d, %Y %I:%M %p') }}</p>
+                            {% if not notification.is_read %}
+                                <button class="mt-2 text-xs text-[var(--color-primary)] hover:underline" onclick="markAsRead({{ notification.id }})">Mark as Read</button>
+                            {% endif %}
+                        </div>
+                    {% endfor %}
+                {% else %}
+                    <p class="p-4 text-sm text-[var(--color-text-muted)]">No new notifications.</p>
+                {% endif %}
+            </div>
+            <div class="p-4 text-center">
+                <a href="#" class="text-[var(--color-primary)] hover:underline text-sm">View All</a>
+            </div>
+        </div>
+        
+        <main class="flex-1 py-8 px-4 sm:px-6 lg:px-8">
+            <div class="mx-auto max-w-xl">
+                <div class="bg-white shadow-xl rounded-lg p-6 md:p-10">
+                    <div class="mb-8 text-center">
+                        <h2 class="text-slate-800 text-3xl font-bold tracking-tight">Edit Profile</h2>
+                        <p class="text-slate-500 mt-2 text-sm">Update your personal information below.</p>
+                    </div>
+                    <form action="{{ url_for('main.edit_profile') }}" enctype="multipart/form-data" method="POST" class="space-y-6">
+                        <div>
+                            <label class="block text-sm font-medium text-slate-700 pb-1.5" for="first_name">First Name</label>
+                            <div class="relative">
+                                <span class="material-icons absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">person</span>
+                                <input class="form-input block w-full rounded-lg border-slate-300 bg-slate-50 py-3 pl-10 pr-3 text-slate-700 shadow-sm transition-colors focus:border-blue-500 focus:ring-blue-500 focus:bg-white placeholder:text-slate-400" id="first_name" name="first_name" placeholder="Enter your first name" type="text" value="{{ current_user.first_name}}"/>
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-slate-700 pb-1.5" for="last_name">Last Name</label>
+                            <div class="relative">
+                                <span class="material-icons absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">person</span>
+                                <input class="form-input block w-full rounded-lg border-slate-300 bg-slate-50 py-3 pl-10 pr-3 text-slate-700 shadow-sm transition-colors focus:border-blue-500 focus:ring-blue-500 focus:bg-white placeholder:text-slate-400" id="last_name" name="last_name" placeholder="Enter your last name" type="text" value="{{ current_user.last_name}}"/>
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-slate-700 pb-1.5" for="email">Email Address</label>
+                            <div class="relative">
+                                <span class="material-icons absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">email</span>
+                                <input class="form-input block w-full rounded-lg border-slate-300 bg-slate-50 py-3 pl-10 pr-3 text-slate-700 shadow-sm transition-colors focus:border-blue-500 focus:ring-blue-500 focus:bg-white placeholder:text-slate-400" id="email" name="email" placeholder="Enter your email address" type="email" value="{{current_user.email}}"/>
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-slate-700 pb-1.5" for="level">Level</label>
+                            <div class="relative">
+                                <span class="material-icons absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">school</span>
+                                <input class="form-input block w-full rounded-lg border-slate-300 bg-slate-50 py-3 pl-10 pr-3 text-slate-700 shadow-sm transition-colors focus:border-blue-500 focus:ring-blue-500 focus:bg-white placeholder:text-slate-400" id="level" name="level" placeholder="Enter your Level" type="text" value="{{ current_user.level }}"/>
+                            </div>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-slate-700 pb-1.5" for="faculty">Faculty</label>
+                            <div class="relative">
+                                <span class="material-icons absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">account_balance</span>
+                                <input class="form-input block w-full rounded-lg border-slate-300 bg-slate-50 py-3 pl-10 pr-3 text-slate-700 shadow-sm transition-colors focus:border-blue-500 focus:ring-blue-500 focus:bg-white placeholder:text-slate-400" id="faculty" name="faculty" placeholder="Enter your Faculty" type="text" value="{{ current_user.faculty }}"/>
+                            </div>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-slate-700 pb-1.5" for="department">Department</label>
+                            <div class="relative">
+                                <span class="material-icons absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">business</span>
+                                <input class="form-input block w-full rounded-lg border-slate-300 bg-slate-50 py-3 pl-10 pr-3 text-slate-700 shadow-sm transition-colors focus:border-blue-500 focus:ring-blue-500 focus:bg-white placeholder:text-slate-400" id="department" name="department" placeholder="Enter your Department" type="text" value="{{ current_user.department }}"/>
+                            </div>
+                        </div>
+                        <div>
+                        <label class="block text-sm font-medium text-slate-700 pb-1.5" for="department">Phone number</label>
+                        <div class="relative">
+                            <span class="material-icons absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">phone</span>
+                            <input class="form-input block w-full rounded-lg border-slate-300 bg-slate-50 py-3 pl-10 pr-3 text-slate-700 shadow-sm transition-colors focus:border-blue-500 focus:ring-blue-500 focus:bg-white placeholder:text-slate-400" id="phone_number" name="phone_number" placeholder="Enter your phone number" type="tel" value="{{ current_user.phone_number}}"/>
+                        </div>
+                        <div>
+                          <br>
+                            <label class="block text-sm font-medium text-slate-700 pb-1.5">Profile Picture</label>
+                            <input type="file" name="profile_picture" accept="image/*" class="form-input w-full"/>
+                        </div>
+                        <div class="pt-4">
+                            <button class="flex w-full items-center justify-center rounded-lg bg-blue-600 py-3 px-4 text-sm font-semibold text-white shadow-md transition-colors hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2" type="submit">
+                                <span class="material-icons mr-2 text-base">save</span>
+                                Save Changes
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </main>
+        <footer class="flex justify-center py-4 px-4 sm:px-6 lg:px-8">
+            <p class="text-center text-xs text-slate-500">
+                © 2025 Clearance System. All rights reserved.
+            </p>
+        </footer>
+    </div>
+</div>
+<script>
+    // Flashed messages auto-hide
+    setTimeout(() => {
+        const alertBox = document.querySelector('[class*="bg-green-500"], [class*="bg-red-500"], [class*="bg-blue-500"]');
+        if (alertBox) {
+            alertBox.style.transition = "opacity 0.5s ease-out";
+            alertBox.style.opacity = 0;
+            setTimeout(() => alertBox.remove(), 500);
+        }
+    }, 3000); // 3 seconds
+
+    // Notification Dropdown Toggle
+    function toggleNotifications() {
+        const dropdown = document.getElementById('notificationDropdown');
+        dropdown.classList.toggle('hidden');
+    }
+
+    // Mark Notification as Read via AJAX
+    function markAsRead(notificationId) {
+        fetch(`/mark_notification_read/${notificationId}`, {
+            method: 'POST',
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest', // Indicate an AJAX request
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({}) // Empty body for POST request
+        })
+        .then(response => {
+            if (response.ok) {
+                // Remove the notification element from the DOM
+                const notificationElement = document.getElementById(`notification-${notificationId}`);
+                if (notificationElement) {
+                    notificationElement.remove();
+                }
+                // Optionally, update the notification count
+                const notificationCountSpan = document.querySelector('.absolute.-top-1.-right-1');
+                if (notificationCountSpan) {
+                    let currentCount = parseInt(notificationCountSpan.textContent);
+                    if (currentCount > 1) {
+                        notificationCountSpan.textContent = currentCount - 1;
+                    } else {
+                        notificationCountSpan.remove(); // Hide if no more notifications
+                    }
+                }
+                // Refresh the page after a short delay to ensure everything is updated (optional, could be more dynamic)
+                setTimeout(() => window.location.reload(), 500);
+            } else {
+                console.error('Failed to mark notification as read.');
+            }
+        })
+        .catch(error => console.error('Error:', error));
+    }
+
+    // Mobile menu toggle logic
+    const menuButton = document.getElementById('menuButton');
+    const mobileSidebar = document.getElementById('mobileSidebar');
+
+    function toggleMobileMenu() {
+        if (mobileSidebar.classList.contains('-translate-x-full')) {
+            mobileSidebar.classList.remove('-translate-x-full');
+        } else {
+            mobileSidebar.classList.add('-translate-x-full');
+        }
+    }
+    
+    if (menuButton) {
+        menuButton.addEventListener('click', toggleMobileMenu);
+    }
+</script>
+
+</body>
+</html>

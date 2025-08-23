@@ -1,0 +1,486 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link crossorigin="" href="https://fonts.gstatic.com/" rel="preconnect"/>
+    <link as="style" href="https://fonts.googleapis.com/css2?display=swap&amp;family=Noto+Sans%3Awght%40400%3B500%3B700%3B900&amp;family=Public+Sans%3Awght%40400%3B500%3B700%3B900" onload="this.rel='stylesheet'" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined" rel="stylesheet"/>
+    <meta charset="utf-8"/>
+    <title>Admin Dashboard</title>
+    <link href="data:image/x-icon;base64," rel="icon" type="image/x-icon"/>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <style>
+        /* Status colors for the table */
+        .status-verified { color: #10b981; } /* Green */
+        .status-rejected { color: #ef4444; }   /* Red */
+        .status-pending { color: #f59e0b; } /* Amber */
+
+        /* Custom styles for the modal to ensure proper display for PDF iframes */
+        #documentModal iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+
+        /* Style for the scrollable student list container */
+        .student-documents-scroll-container {
+            max-height: 400px; /* Adjust this value to control how many student entries are visible */
+            overflow-y: auto;
+            border-radius: 0.5rem; /* Matches rounded-lg */
+            box-shadow: var(--tw-shadow); /* Matches shadow */
+            border: 1px solid #e2e8f0; /* Matches border border-slate-200 */
+            background-color: white; /* Matches bg-white */
+        }
+
+        /* Keep the header of each student's section visible */
+        .student-doc-header {
+            position: sticky;
+            top: 0;
+            background-color: white; /* Match background for seamless look */
+            z-index: 10;
+            border-bottom: 1px solid #e2e8f0;
+            padding: 1rem;
+        }
+
+        /* Flash Message Styling */
+        .flash-message {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 10px 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            z-index: 1000;
+            display: none; /* Hidden by default */
+            font-weight: 500;
+            font-size: 0.9rem;
+            min-width: 250px;
+            text-align: center;
+        }
+        .flash-success {
+            background-color: #d1fae5; /* green-100 */
+            color: #065f46; /* green-800 */
+            border: 1px solid #34d399; /* green-400 */
+        }
+        .flash-warning {
+            background-color: #fffbeb; /* amber-100 */
+            color: #b45309; /* amber-800 */
+            border: 1px solid #fbbf24; /* amber-400 */
+        }
+        .flash-danger {
+            background-color: #fee2e2; /* red-100 */
+            color: #991b1b; /* red-800 */
+            border: 1px solid #ef4444; /* red-400 */
+        }
+        .flash-info {
+            background-color: #e0f2fe; /* blue-100 */
+            color: #1e40af; /* blue-800 */
+            border: 1px solid #60a5fa; /* blue-400 */
+        }
+    </style>
+</head>
+<body style='font-family: "Public Sans", "Noto Sans", sans-serif;'>
+    <div class="relative flex size-full min-h-screen flex-col bg-slate-50 group/design-root overflow-x-hidden">
+        <div class="layout-container flex h-full grow flex-col">
+            <header class="flex items-center justify-between whitespace-nowrap border-b border-solid border-b-slate-200 px-6 md:px-10 py-4 bg-white shadow-sm">
+                
+                <div class="flex items-center gap-4">
+                    <div class="size-7 text-[var(--color-primary)]">
+                    <svg fill="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M18 6h-2V4a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2H6a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2zm-8-2h4v2h-4V4zM6 8h12v12H6V8zm6 5.5l-3 3-1-1 4-4 4 4-1 1-3-3z"/>
+                    </svg>
+                </div>
+                <h1 class="text-xl font-semibold leading-tight tracking-tight">Hostel Clearance System</h1>
+            </div>
+                    <a href="{{ url_for('main.admin_logout') }}" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-black  focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500">
+                        <span class="material-icons-outlined text-base mr-2">logout</span>
+                        Logout
+                    </a>
+                    
+                </div>
+            </header>
+
+            <div class="px-6 md:px-10 lg:px-20 xl:px-40 flex flex-1 justify-center py-8">
+                <div class="layout-content-container flex flex-col max-w-screen-xl flex-1">
+                    <div class="flex flex-wrap justify-between items-center gap-4 p-4 mb-6">
+                        <p class="text-slate-900 tracking-tight text-3xl font-bold leading-tight">Admin Dashboard</p>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 p-4 mb-8">
+                        <div class="flex flex-col gap-2 rounded-xl p-6 bg-white shadow-lg border border-slate-200 transition-all hover:shadow-xl">
+                            <div class="flex items-center gap-3">
+                                <span class="material-icons text-blue-600 text-3xl">groups</span>
+                                <p class="text-slate-700 text-base font-medium leading-normal">Total Students Registered</p>
+                            </div>
+                            <p class="text-slate-900 tracking-tight text-4xl font-bold leading-tight">{{ total_students | default(0) }}</p>
+                        </div>
+
+                        <div class="flex flex-col gap-2 rounded-xl p-6 bg-white shadow-lg border border-slate-200 transition-all hover:shadow-xl">
+                            <div class="flex items-center gap-3">
+                                <span class="material-icons text-amber-500 text-3xl">hourglass_top</span>
+                                <p class="text-slate-700 text-base font-medium leading-normal">Pending Clearances</p>
+                            </div>
+                            <p class="text-slate-900 tracking-tight text-4xl font-bold leading-tight">{{ pending_clearances | default(0) }}</p>
+                        </div>
+
+                        <div class="flex flex-col gap-2 rounded-xl p-6 bg-white shadow-lg border border-slate-200 transition-all hover:shadow-xl">
+                            <div class="flex items-center gap-3">
+                                <span class="material-icons text-green-500 text-3xl">check_circle_outline</span>
+                                <p class="text-slate-700 text-base font-medium leading-normal">Approved Clearances</p>
+                            </div>
+                            <p class="text-slate-900 tracking-tight text-4xl font-bold leading-tight">{{ approved_clearances | default(0)}}</p>
+                        </div>
+
+                        <div class="flex flex-col gap-2 rounded-xl p-6 bg-white shadow-lg border border-slate-200 transition-all hover:shadow-xl">
+                            <div class="flex items-center gap-3">
+                                <span class="material-icons text-red-500 text-3xl">highlight_off</span>
+                                <p class="text-slate-700 text-base font-medium leading-normal">Rejected Clearances</p>
+                            </div>
+                            <p class="text-slate-900 tracking-tight text-4xl font-bold leading-tight">{{ rejected_clearances | default(0) }}</p>
+                        </div>
+                    </div>
+
+                    
+                    <div id="flash-messages" class="mt-4">
+                        </div>
+                    
+                  <div class="flex p-4">
+    <a href="{{ url_for('main.manage_students') }}" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-slate-600 hover:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-slate-500">
+        <span class="material-icons-outlined text-base mr-2">settings</span>
+        Manage Students
+    </a>
+</div>
+
+                    <div class="mb-8 px-4">
+                        <h2 class="text-slate-900 text-xl font-semibold leading-tight tracking-[-0.015em] pb-4 pt-5">Uploaded Documents Review</h2>
+                        <div class="student-documents-scroll-container">
+                            {% if students_with_docs %}
+                                {% for student_data in students_with_docs %}
+                                <div class="bg-white p-4 {% if not loop.first %}border-t border-slate-200{% endif %}">
+                                    <div class="student-doc-header flex items-center justify-between pb-3 mb-3 border-b border-slate-200">
+    <h3 class="text-lg font-semibold text-slate-800">
+        {{ student_data.student.full_name }} <span class="text-slate-500 text-sm">({{ student_data.student.registration_number }})</span>
+        <span class="text-slate-600 text-sm block mt-1">
+            Hostel: {{ student_data.student.hostel }}, Block: {{ student_data.student.block }}, Room No: {{ student_data.student.room_number }}
+        </span>
+    </h3>
+</div>
+                                    <div class="overflow-x-auto"> {# Enable horizontal scroll for individual student's table if needed #}
+                                        <table class="min-w-full divide-y divide-slate-200 text-sm">
+                                            <thead class="bg-slate-50">
+                                                <tr>
+                                                    <th class="px-4 py-2 text-left font-semibold text-slate-700">Document Type</th>
+                                                    <th class="px-4 py-2 text-left font-semibold text-slate-700">Status & Details</th>
+                                                    <th class="px-4 py-2 text-left font-semibold text-slate-700">Actions</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody class="divide-y divide-slate-100">
+                                                {% for doc_item in student_data.documents %}
+                                                    <tr id="doc-row-{{ doc_item.doc_object.id if doc_item.doc_object else 'none' }}">
+                                                        <td class="px-4 py-3 whitespace-nowrap">
+                                                            {{ doc_item.doc_type_display }}
+                                                        </td>
+                                                        <td class="px-4 py-3" id="status-{{ doc_item.doc_object.id if doc_item.doc_object else 'none' }}">
+                                                            {% if doc_item.doc_object %}
+                                                                <span class="
+                                                                    {% if doc_item.doc_object.verified %} status-verified
+                                                                    {% elif doc_item.doc_object.rejection_reason %} status-rejected
+                                                                    {% else %} status-pending {% endif %}
+                                                                ">
+                                                                    {{ 'Verified' if doc_item.doc_object.verified else ('Rejected' if doc_item.doc_object.rejection_reason else 'Pending') }}
+                                                                </span>
+                                                                {% if doc_item.doc_object.rejection_reason %}
+                                                                    <p class="text-xs text-slate-400 rejection-reason">Reason: {{ doc_item.doc_object.rejection_reason }}</p>
+                                                                {% endif %}
+                                                                <div class="mt-1">
+                                                                    <button type="button"
+                                                                            onclick="openDocumentModal('{{ url_for('static', filename='uploads/' + doc_item.doc_object.filename) }}', '{{ doc_item.doc_type_display }}')"
+                                                                            class="text-blue-600 hover:underline text-xs focus:outline-none">
+                                                                        View Document
+                                                                    </button>
+                                                                </div>
+                                                            {% else %}
+                                                                <span class="status-pending">Not Uploaded</span>
+                                                            {% endif %}
+                                                        </td>
+                                                        <td class="px-4 py-3 space-x-2" id="actions-{{ doc_item.doc_object.id if doc_item.doc_object else 'none' }}">
+                                                            {% if doc_item.doc_object %}
+                                                                {% if not doc_item.doc_object.verified %} {# Only show actions if not already verified #}
+                                                                    <form class="inline-block mr-2 mb-1 document-action-form" data-document-id="{{ doc_item.doc_object.id }}" action="{{ url_for('main.update_document_status', document_id=doc_item.doc_object.id, status='approve') }}" method="post">
+                                                                        <button type="submit" class="bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded text-xs">Approve</button>
+                                                                    </form>
+                                                                    <form class="inline-block document-action-form" data-document-id="{{ doc_item.doc_object.id }}" action="{{ url_for('main.update_document_status', document_id=doc_item.doc_object.id, status='reject') }}" method="post">
+                                                                        <textarea name="rejection_reason" placeholder="Reason (Required)" rows="2" class="w-full px-2 py-1 border border-slate-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-xs resize-y"></textarea>
+                                                                        <button type="submit" class="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded text-xs mt-1">Reject</button>
+                                                                    </form>
+                                                                {% else %}
+                                                                    <span class="status-verified text-xs">Actioned</span>
+                                                                {% endif %}
+                                                            {% else %}
+                                                                <span class="text-slate-400 text-xs">No Document</span>
+                                                            {% endif %}
+                                                        </td>
+                                                    </tr>
+                                                {% endfor %} {# This was the missing endfor #}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            {% else %}
+                                <div class="bg-white rounded-lg shadow border border-slate-200 p-6 text-center text-slate-400">
+                                    No students with uploaded documents to review.
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div>
+                        <h2 class="text-slate-900 text-xl font-semibold leading-tight tracking-[-0.015em] px-4 pb-4 pt-5">Clearance Overview</h2>
+                        <div class="flex flex-wrap gap-6 px-4 py-6">
+                            <div class="flex min-w-72 flex-1 flex-col gap-4 rounded-xl border border-slate-200 p-6 bg-white shadow-lg">
+                                <div class="flex items-center justify-between">
+                                    <p class="text-slate-800 text-lg font-semibold leading-normal">Clearance Status Distribution</p>
+                                    <p class="text-slate-600 text-sm font-medium">Total: <span class="font-bold text-slate-800">{{ total_students }}</span></p>
+                                </div>
+                                <div class="w-full h-4 bg-slate-200 rounded-full overflow-hidden flex">
+                                    <div class="h-full bg-amber-500" style="width: {{ pending_percentage }}%;"></div>
+                                    <div class="h-full bg-green-500" style="width: {{ approved_percentage }}%;"></div>
+                                    <div class="h-full bg-red-500" style="width: {{ rejected_percentage }}%;"></div>
+                                </div>
+                                <div class="flex justify-around text-xs font-medium text-slate-600">
+                                    <div class="flex items-center gap-1">
+                                        <span class="inline-block w-3 h-3 rounded-full bg-amber-500"></span> Pending ({{ pending_clearances }})
+                                    </div>
+                                    <div class="flex items-center gap-1">
+                                        <span class="inline-block w-3 h-3 rounded-full bg-green-500"></span> Approved ({{ approved_clearances }})
+                                    </div>
+                                    <div class="flex items-center gap-1">
+                                        <span class="inline-block w-3 h-3 rounded-full bg-red-500"></span> Rejected ({{ rejected_clearances }})
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="flex min-w-72 flex-1 flex-col gap-4 rounded-xl border border-slate-200 p-6 bg-white shadow-lg">
+                                <p class="text-slate-800 text-lg font-semibold leading-normal">Recent Activities</p>
+                                <ul class="max-h-48 overflow-y-auto divide-y divide-slate-200">
+                                    {% for activity in recent_activities %}
+                                    <li class="py-2 flex items-center justify-between text-slate-700 text-sm">
+                                        <span>{{ activity.description }}</span>
+                                        <span class="text-xs text-slate-500">{{ activity.timestamp }}</span>
+                                    </li>
+                                    {% else %}
+                                    <li class="py-2 text-center text-slate-400">No recent activities</li>
+                                    {% endfor %}
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    <footer class="mt-auto border-t border-slate-200 py-4 px-4 text-slate-500 text-center text-xs">
+                        &copy; {{ current_year }} Clearance Portal
+                    </footer>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="documentModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50 hidden">
+        <div class="bg-white rounded-lg shadow-xl w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col">
+            <div class="flex justify-between items-center p-4 border-b border-slate-200">
+                <h3 class="text-lg font-semibold text-slate-800" id="modalDocTitle">Document Viewer</h3>
+                <button id="closeModal" class="text-slate-500 hover:text-slate-800">
+                    <span class="material-icons-outlined">close</span>
+                </button>
+            </div>
+            <div class="p-4 flex-grow overflow-auto flex items-center justify-center">
+                <img id="modalDocImage" src="" alt="Document" class="max-w-full max-h-full object-contain hidden">
+                <iframe id="modalDocPdf" src="" frameborder="0" class="w-full h-full hidden"></iframe>
+                <p id="modalDocMessage" class="text-slate-600 hidden">Loading document...</p>
+            </div>
+        </div>
+    </div>
+
+<script>
+    const documentModal = document.getElementById('documentModal');
+    const closeModalButton = document.getElementById('closeModal');
+    const modalDocTitle = document.getElementById('modalDocTitle');
+    const modalDocImage = document.getElementById('modalDocImage');
+    const modalDocPdf = document.getElementById('modalDocPdf');
+    const modalDocMessage = document.getElementById('modalDocMessage');
+    const flashMessagesContainer = document.getElementById('flash-messages');
+
+    function openDocumentModal(docUrl, docTypeDisplay) {
+        modalDocImage.classList.add('hidden');
+        modalDocPdf.classList.add('hidden');
+        modalDocMessage.classList.remove('hidden');
+        modalDocMessage.textContent = 'Loading document...';
+
+        modalDocTitle.textContent = docTypeDisplay + ' Document';
+        documentModal.classList.remove('hidden');
+
+        const fileExtension = docUrl.split('.').pop().toLowerCase();
+
+        if (['jpg', 'jpeg', 'png', 'gif'].includes(fileExtension)) {
+            modalDocImage.src = docUrl;
+            modalDocImage.onload = () => {
+                modalDocImage.classList.remove('hidden');
+                modalDocMessage.classList.add('hidden');
+            };
+            modalDocImage.onerror = () => {
+                modalDocMessage.textContent = 'Error loading image.';
+                console.error('Failed to load image:', docUrl);
+            };
+        } else if (fileExtension === 'pdf') {
+            modalDocPdf.src = docUrl;
+            modalDocPdf.onload = () => {
+                modalDocPdf.classList.remove('hidden');
+                modalDocMessage.classList.add('hidden');
+            };
+            modalDocPdf.onerror = () => {
+                modalDocMessage.textContent = 'Error loading PDF.';
+                console.error('Failed to load PDF:', docUrl);
+            };
+        } else {
+            modalDocMessage.textContent = 'Unsupported document type. Please download or open in a new tab if supported by your browser: ' + docUrl;
+        }
+    }
+
+    function closeDocumentModal() {
+        documentModal.classList.add('hidden');
+        modalDocImage.src = '';
+        modalDocPdf.src = '';
+        modalDocMessage.classList.add('hidden');
+    }
+
+    closeModalButton.addEventListener('click', closeDocumentModal);
+
+    documentModal.addEventListener('click', (e) => {
+        if (e.target === documentModal) {
+            closeDocumentModal();
+        }
+    });
+
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && !documentModal.classList.contains('hidden')) {
+            closeDocumentModal();
+        }
+    });
+
+    function showFlashMessage(message, type) {
+        const div = document.createElement('div');
+        div.className = `flash-message flash-${type}`;
+        div.textContent = message;
+        flashMessagesContainer.prepend(div);
+        div.style.display = 'block';
+
+        setTimeout(() => {
+            div.style.display = 'none';
+            div.remove();
+        }, 5000);
+    }
+    
+    // --- NEW AJAX SCRIPT FOR FORM SUBMISSION ---
+    document.addEventListener('DOMContentLoaded', () => {
+        const forms = document.querySelectorAll('.document-action-form');
+        
+        forms.forEach(form => {
+            form.addEventListener('submit', async (event) => {
+                event.preventDefault();
+
+                const documentId = form.dataset.documentId;
+                const url = form.action;
+                const formData = new FormData(form);
+
+                // Find the action buttons for this row
+                const actionsCell = document.getElementById(`actions-${documentId}`);
+                const statusCell = document.getElementById(`status-${documentId}`);
+
+                if (!statusCell || !actionsCell) {
+                    console.error(`Could not find elements for document ID: ${documentId}`);
+                    return;
+                }
+
+                try {
+                    // Temporarily disable buttons and show a loading spinner
+                    const buttons = form.querySelectorAll('button');
+                    buttons.forEach(btn => btn.disabled = true);
+                    actionsCell.innerHTML = '<span class="text-slate-500 text-xs">Processing...</span>';
+
+
+                    const response = await fetch(url, {
+                        method: 'POST',
+                        body: formData,
+                        headers: {
+                            'X-Requested-With': 'XMLHttpRequest'
+                        }
+                    });
+
+                    const result = await response.json();
+
+                    if (result.success) {
+                        let statusText = '';
+                        let statusClass = '';
+                        let rejectionReasonHtml = '';
+
+                        // --- THE FIX IS HERE: CHECKING `new_status` INSTEAD OF `verified` ---
+                        if (result.new_status === 'approve') {
+                            statusText = 'Verified';
+                            statusClass = 'status-verified';
+                        } else if (result.new_status === 'reject') {
+                            statusText = 'Rejected';
+                            statusClass = 'status-rejected';
+                            // Assuming your Flask route returns `rejection_reason` in the JSON for rejects
+                            if (result.rejection_reason) {
+                                rejectionReasonHtml = `<p class="text-xs text-slate-400 rejection-reason">Reason: ${result.rejection_reason}</p>`;
+                            }
+                        }
+
+                        // Update status text, class, and view button
+                        statusCell.innerHTML = `
+                            <span class="${statusClass}">
+                                ${statusText}
+                            </span>
+                            ${rejectionReasonHtml}
+                            <div class="mt-1">
+                                <button type="button"
+                                        onclick="openDocumentModal('${result.document_url}', '${result.doc_type_display}')"
+                                        class="text-blue-600 hover:underline text-xs focus:outline-none">
+                                    View Document
+                                </button>
+                            </div>
+                        `;
+
+                        // Update the actions cell to show "Actioned" and remove buttons
+                        actionsCell.innerHTML = `<span class="${statusClass} text-xs">Actioned</span>`;
+
+                        showFlashMessage(result.message, 'success');
+                    } else {
+                        // On failure, re-enable buttons
+                        buttons.forEach(btn => btn.disabled = false);
+                        showFlashMessage(result.message || 'An error occurred.', 'danger');
+                    }
+
+                } catch (error) {
+                    console.error('Error submitting form:', error);
+                    // On error, re-enable buttons and show error message
+                    const buttons = form.querySelectorAll('button');
+                    buttons.forEach(btn => btn.disabled = false);
+                    actionsCell.innerHTML = `
+                        <form class="inline-block mr-2 mb-1 document-action-form" data-document-id="${documentId}" action="${form.action}" method="post">
+                            <button type="submit" class="bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded text-xs">Approve</button>
+                        </form>
+                        <form class="inline-block document-action-form" data-document-id="${documentId}" action="${form.action}" method="post">
+                            <textarea name="rejection_reason" placeholder="Reason (Required)" rows="2" class="w-full px-2 py-1 border border-slate-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-xs resize-y"></textarea>
+                            <button type="submit" class="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded text-xs mt-1">Reject</button>
+                        </form>
+                    `;
+                    showFlashMessage('Network error or server issue. Please try again.', 'danger');
+                }
+            });
+        });
+    });
+</script>
+</body>
+</html>

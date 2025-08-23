@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link crossorigin="" href="https://fonts.gstatic.com/" rel="preconnect"/>
+<link as="style" href="https://fonts.googleapis.com/css2?display=swap&amp;family=Noto+Sans%3Awght%40400%3B500%3B700%3B900&amp;family=Public+Sans%3Awght%40400%3B500%3B600%3B700%3B800%3B900" onload="this.rel='stylesheet'" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Icons+Outlined" rel="stylesheet"/>
+<title>Admin Login - Hostel Clearance System</title>
+<link href="data:image/x-icon;base64," rel="icon" type="image/x-icon"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<style>
+      .material-icons-outlined {
+        font-size: inherit;line-height: inherit;
+        vertical-align: middle;
+      }
+    </style>
+</head>
+<body style='font-family: "Public Sans", "Noto Sans", sans-serif;'>
+<div class="relative flex min-h-screen flex-col bg-slate-100 group/design-root overflow-x-hidden">
+<header class="sticky top-0 z-10 flex items-center justify-between whitespace-nowrap border-b border-solid border-slate-200 bg-white px-6 sm:px-10 py-4 shadow-sm">
+<div class="flex items-center gap-3 text-slate-800">
+
+<h1 class="text-slate-800 text-xl font-semibold leading-tight tracking-tight">Hostel Clearance System</h1>
+</div>
+</header>
+<main class="flex flex-1 items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+<div class="w-full max-w-md space-y-8">
+<div class="bg-white p-8 shadow-xl rounded-xl">
+<div class="text-center mb-8">
+<span class="material-icons-outlined text-5xl text-blue-600 mb-2">admin_panel_settings</span>
+<h2 class="text-3xl font-bold tracking-tight text-slate-900">Admin Login</h2>
+<p class="mt-2 text-sm text-slate-600">Access the verification system.</p>
+</div>
+<form class="space-y-6" action="{{url_for('main.admin_login')}}" method="post">
+<div>
+<label class="block text-sm font-medium text-slate-700 pb-1.5" for="username">Username</label>
+<div class="relative">
+<div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+<span class="material-icons-outlined text-slate-400">person_outline</span>
+</div>
+<input autocomplete="username" class="form-input block w-full rounded-lg border-slate-300 bg-slate-50 py-3 pl-10 pr-3 text-slate-900 placeholder-slate-500 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm" id="admin_username" name="admin_username" placeholder="Enter your username" required="" type="text"/>
+</div>
+</div>
+<div>
+<label class="block text-sm font-medium text-slate-700 pb-1.5" for="password">Password</label>
+<div class="relative">
+<div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+<span class="material-icons-outlined text-slate-400">lock_outline</span>
+</div>
+<input autocomplete="current-password" class="form-input block w-full rounded-lg border-slate-300 bg-slate-50 py-3 pl-10 pr-3 text-slate-900 placeholder-slate-500 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm" id="admin_password" name="admin_password" placeholder="Enter your password" required="" type="password"/>
+</div>
+</div>
+<div class="flex items-center justify-between pt-2">
+
+
+</div>
+<div>
+<button class="flex w-full items-center justify-center rounded-lg bg-blue-600 px-4 py-3 text-sm font-semibold text-white shadow-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors duration-150 ease-in-out" type="submit">
+<span class="material-icons-outlined mr-2">login</span>
+                  Login
+                </button>
+</div>
+</form>
+</div>
+</div>
+</main>
+<footer class="py-6 px-4 text-center text-sm text-slate-500 border-t border-slate-200 bg-white">
+        © 2025 Hostel Clearance System. All rights reserved.
+      </footer>
+</div>
+
+</body></html>

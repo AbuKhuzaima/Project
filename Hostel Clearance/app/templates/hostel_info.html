@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link crossorigin="" href="https://fonts.gstatic.com/" rel="preconnect"/>
+    <link as="style" href="https://fonts.googleapis.com/css2?display=swap&family=Noto+Sans%3Awght%40400%3B500%3B700%3B900&family=Public+Sans%3Awght%40400%3B500%3B600%3B700%3B800&family=Material+Icons" onload="this.rel='stylesheet'" rel="stylesheet"/>
+    <title>Hostel Information</title>
+    <link href="data:image/x-icon;base64," rel="icon" type="image/x-icon"/>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <style type="text/tailwindcss">
+        @layer base {
+            :root {
+                --color-primary: #1978e5;
+                --color-primary-hover: #135cb3;
+                --color-text-primary: #1a202c;
+                --color-text-secondary: #4a5568;
+                --color-text-muted: #718096;
+                --color-bg-primary: #ffffff;
+                --color-bg-secondary: #f7fafc;
+                --color-border: #e2e8f0;
+            }
+            body {
+                font-family: "Public Sans", "Noto Sans", sans-serif;
+                color: var(--color-text-primary);
+                background-color: var(--color-bg-secondary);
+            }
+            .active-link {
+                color: var(--color-primary);
+                font-weight: 600;
+                position: relative;
+            }
+            .active-link::after {
+                content: '';
+                position: absolute;
+                bottom: -8px;
+                left: 0;
+                width: 100%;
+                height: 2px;
+                background-color: var(--color-primary);
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="relative flex size-full min-h-screen flex-col group/design-root overflow-x-hidden">
+    <div class="layout-container flex h-full grow flex-col">
+        <header class="flex items-center justify-between whitespace-nowrap border-b border-solid border-[var(--color-border)] bg-[var(--color-bg-primary)] px-6 md:px-10 py-4 shadow-sm">
+            <div class="flex items-center gap-3 text-[var(--color-text-primary)]">
+                <div class="size-7 text-[var(--color-primary)]">
+                    <svg fill="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M18 6h-2V4a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2H6a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2zm-8-2h4v2h-4V4zM6 8h12v12H6V8zm6 5.5l-3 3-1-1 4-4 4 4-1 1-3-3z"/>
+                    </svg>
+                </div>
+                <h1 class="text-xl font-semibold leading-tight tracking-tight">Hostel Clearance</h1>
+            </div>
+            <nav class="hidden md:flex items-center gap-8">
+                <a class="text-[var(--color-text-secondary)] hover:text-[var(--color-primary)] text-sm font-medium leading-normal transition-colors" href="{{ url_for('main.dashboard') }}">Dashboard</a>
+                <a class="text-[var(--color-text-secondary)] hover:text-[var(--color-primary)] text-sm font-medium leading-normal transition-colors" href="{{ url_for('main.student_profile') }}">Profile</a>
+                <a class="active-link text-sm font-medium leading-normal" href="{{ url_for('main.hostel_info') }}">Hostel Information</a>
+                <a href="{{ url_for('main.logout') }}" class="text-[var(--color-text-muted)] hover:text-red-600 transition-colors text-sm font-medium leading-normal">Logout</a>
+            </nav>
+            <div class="flex items-center gap-4">
+                <button aria-label="Notifications" class="text-[var(--color-text-muted)] hover:text-[var(--color-primary)] transition-colors relative" onclick="toggleNotifications()">
+                    <span class="material-icons">notifications</span>
+                    {% if student_notifications|length > 0 %}
+                    <span id="notification-count" class="absolute -top-1 -right-1 inline-flex items-center justify-center size-5 text-xs font-bold leading-none text-red-100 bg-red-600 rounded-full">
+                        {{ student_notifications|length }}
+                    </span>
+                    {% endif %}
+                </button>
+                <img src="{{ url_for('static', filename='profile_pics/' + (current_user.profile_picture or 'default.jpg')) }}"
+                     alt="Profile Picture"
+                     class="rounded-full size-10 border border-slate-200 object-cover"/>
+            </div>
+            <button class="md:hidden text-[var(--color-text-muted)] hover:text-[var(--color-primary)] transition-colors" id="menuButton">
+                <span class="material-icons text-3xl">menu</span>
+            </button>
+        </header>
+
+        <div id="mobileSidebar" class="fixed top-0 left-0 h-full w-64 bg-white shadow-lg z-50 transform -translate-x-full transition-transform duration-300 md:hidden">
+            <div class="p-4 border-b border-gray-200">
+                <div class="flex items-center justify-between">
+                    <p class="font-semibold text-lg text-[var(--color-text-primary)]">Menu</p>
+                    <button class="text-[var(--color-text-muted)] hover:text-[var(--color-primary)]" onclick="toggleMobileMenu()">
+                        <span class="material-icons">close</span>
+                    </button>
+                </div>
+            </div>
+            <nav class="p-4 space-y-4">
+                <a href="{{ url_for('main.dashboard') }}" class="block text-[var(--color-text-primary)] hover:text-[var(--color-primary)] font-medium">Dashboard</a>
+                <a href="{{ url_for('main.student_profile') }}" class="block text-[var(--color-text-primary)] hover:text-[var(--color-primary)] font-medium">Profile</a>
+                <a href="{{ url_for('main.hostel_info') }}" class="block  text-[var(--color-text-primary)] hover:text-[var(--color-primary)] font-medium">Hostel Information</a>
+                <a href="{{ url_for('main.logout') }}" class="block text-[var(--color-text-primary)] hover:text-red-600 font-medium">Logout</a>
+            </nav>
+        </div>
+
+        <div id="notificationDropdown" class="hidden absolute right-4 md:right-10 top-16 mt-2 w-72 bg-white rounded-lg shadow-lg z-50 border border-[var(--color-border)]">
+            <div class="p-4 border-b border-[var(--color-border)]">
+                <h3 class="text-lg font-semibold text-[var(--color-text-primary)]">Notifications</h3>
+            </div>
+            <div class="max-h-60 overflow-y-auto">
+                {% if student_notifications %}
+                    {% for notification in student_notifications %}
+                        <div id="notification-{{ notification.id }}" class="px-4 py-3 border-b last:border-b-0 border-[var(--color-border)] {% if not notification.is_read %}bg-blue-50{% endif %}">
+                            <p class="text-sm text-[var(--color-text-primary)]">{{ notification.message }}</p>
+                            <p class="text-xs text-[var(--color-text-muted)] mt-1">{{ notification.created_at.strftime('%b %d, %Y %I:%M %p') }}</p>
+                            {% if not notification.is_read %}
+                                <button class="mt-2 text-xs text-[var(--color-primary)] hover:underline" onclick="markAsRead({{ notification.id }})">Mark as Read</button>
+                            {% endif %}
+                        </div>
+                    {% endfor %}
+                {% else %}
+                    <p class="p-4 text-sm text-[var(--color-text-muted)]">No new notifications.</p>
+                {% endif %}
+            </div>
+            <div class="p-4 text-center">
+                <a href="#" class="text-[var(--color-primary)] hover:underline text-sm">View All</a>
+            </div>
+        </div>
+
+        <div class="container mx-auto px-4">
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    <div class="mb-4">
+                        {% for category, message in messages %}
+                            <br>
+                            <div class="p-4 rounded-lg text-white
+                                {% if category == 'success' %} bg-green-500
+                                {% elif category == 'error' %} bg-red-500
+                                {% else %} bg-blue-500
+                                {% endif %}">
+                                {{ message }}
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            {% endwith %}
+        </div>
+        <main class="flex flex-1 justify-center py-8 px-4 sm:px-6 lg:px-8">
+            <div class="layout-content-container w-full max-w-2xl">
+                <div class="bg-[var(--color-bg-primary)] shadow-lg rounded-xl p-6 sm:p-8">
+                    <h2 class="text-2xl font-bold mb-6 text-[var(--color-text-primary)] text-center">Hostel Allocation Details</h2>
+
+                    {% if allocated and hostel and block and room_number %}
+                        <div class="space-y-4 text-lg">
+                            <p><strong>Hostel:</strong> <span class=" font-semibold">{{ hostel }}</span></p>
+                            <p><strong>Block:</strong> <span class=" font-semibold">{{ block }}</span></p>
+                            <p><strong>Room Number:</strong> <span class=" font-semibold">{{ room_number }}</span></p>
+                        </div>
+                        <p class="mt-6 text-center text-md text-[var(--color-text-secondary)]">
+                            Your room has been successfully allocated.
+                        </p>
+                    {% else %}
+                        <div class="text-center p-8 bg-blue-50 border border-blue-200 rounded-lg">
+                            <p class="text-xl font-semibold text-blue-800 mb-4">No Room Allocated Yet</p>
+                            <p class="text-md text-blue-700 mb-6">
+                                Your hostel room has not been allocated. Please return to your dashboard to initiate the allocation process.
+                            </p>
+                            <a href="{{ url_for('main.dashboard') }}" class="inline-flex items-center justify-center rounded-lg bg-[var(--color-primary)] px-6 py-3 text-base font-semibold text-white shadow-md transition-colors hover:bg-[var(--color-primary-hover)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)] focus:ring-offset-2">
+                                Go to Dashboard
+                            </a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </main>
+    </div>
+</div>
+
+<script>
+    // Flashed messages auto-hide
+    setTimeout(() => {
+        const alertBox = document.querySelector('[class*="bg-green-500"], [class*="bg-red-500"], [class*="bg-blue-500"]');
+        if (alertBox) {
+            alertBox.style.transition = "opacity 0.5s ease-out";
+            alertBox.style.opacity = 0;
+            setTimeout(() => alertBox.remove(), 500);
+        }
+    }, 3000); // 3 seconds
+
+    // Notification Dropdown Toggle
+    function toggleNotifications() {
+        const dropdown = document.getElementById('notificationDropdown');
+        dropdown.classList.toggle('hidden');
+    }
+
+    // Mark Notification as Read via AJAX
+    function markAsRead(notificationId) {
+        fetch(`/mark_notification_read/${notificationId}`, {
+            method: 'POST',
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({})
+        })
+        .then(response => {
+            if (response.ok) {
+                // If the server confirms success, update the UI
+                const notificationElement = document.getElementById(`notification-${notificationId}`);
+                if (notificationElement) {
+                    notificationElement.remove();
+                }
+
+                // Update the notification count
+                const notificationCountSpan = document.getElementById('notification-count');
+                if (notificationCountSpan) {
+                    let currentCount = parseInt(notificationCountSpan.textContent);
+                    if (currentCount > 1) {
+                        notificationCountSpan.textContent = currentCount - 1;
+                    } else {
+                        notificationCountSpan.remove();
+                    }
+                }
+            } else {
+                console.error('Failed to mark notification as read.');
+            }
+        })
+        .catch(error => console.error('Error:', error));
+    }
+
+
+    // Mobile menu toggle logic
+    const menuButton = document.getElementById('menuButton');
+    const mobileSidebar = document.getElementById('mobileSidebar');
+
+    function toggleMobileMenu() {
+        if (mobileSidebar.classList.contains('-translate-x-full')) {
+            mobileSidebar.classList.remove('-translate-x-full');
+        } else {
+            mobileSidebar.classList.add('-translate-x-full');
+        }
+    }
+    
+    if (menuButton) {
+        menuButton.addEventListener('click', toggleMobileMenu);
+    }
+</script>
+
+</body>
+</html>

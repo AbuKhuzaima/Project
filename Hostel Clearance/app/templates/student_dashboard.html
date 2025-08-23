@@ -1,0 +1,500 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link crossorigin="" href="https://fonts.gstatic.com/" rel="preconnect"/>
+    <link as="style" href="https://fonts.googleapis.com/css2?display=swap&family=Noto+Sans%3Awght%40400%3B500%3B700%3B900&family=Public+Sans%3Awght%40400%3B500%3B600%3B700%3B800&family=Material+Icons" onload="this.rel='stylesheet'" rel="stylesheet"/>
+    <title>Student Dashboard</title>
+    <link href="data:image/x-icon;base64," rel="icon" type="image/x-icon"/>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <style type="text/tailwindcss">
+        @layer base {
+            :root {
+                --color-primary: #1978e5;
+                --color-primary-hover: #135cb3;
+                --color-text-primary: #1a202c;
+                --color-text-secondary: #4a5568;
+                --color-text-muted: #718096;
+                --color-bg-primary: #ffffff;
+                --color-bg-secondary: #f7fafc;
+                --color-border: #e2e8f0;
+            }
+            body {
+                font-family: "Public Sans", "Noto Sans", sans-serif;
+                color: var(--color-text-primary);
+                background-color: var(--color-bg-secondary);
+            }
+            .active-link {
+                color: var(--color-primary);
+                font-weight: 600;
+                position: relative;
+            }
+            .active-link::after {
+                content: '';
+                position: absolute;
+                bottom: -8px;
+                left: 0;
+                width: 100%;
+                height: 2px;
+                background-color: var(--color-primary);
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="relative flex size-full min-h-screen flex-col group/design-root overflow-x-hidden">
+    <div class="layout-container flex h-full grow flex-col">
+        <header class="flex items-center justify-between whitespace-nowrap border-b border-solid border-[var(--color-border)] bg-[var(--color-bg-primary)] px-6 md:px-10 py-4 shadow-sm">
+            <div class="flex items-center gap-3 text-[var(--color-text-primary)]">
+                <div class="size-7 text-[var(--color-primary)]">
+                    <svg fill="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M18 6h-2V4a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2H6a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2zm-8-2h4v2h-4V4zM6 8h12v12H6V8zm6 5.5l-3 3-1-1 4-4 4 4-1 1-3-3z"/>
+                    </svg>
+                </div>
+                <h1 class="text-xl font-semibold leading-tight tracking-tight">Hostel Clearance</h1>
+            </div>
+            <nav class="hidden md:flex items-center gap-8">
+                <a class="active-link text-sm font-medium leading-normal" href="{{ url_for('main.dashboard') }}">Dashboard</a>
+                <a class="text-[var(--color-text-secondary)] hover:text-[var(--color-primary)] text-sm font-medium leading-normal transition-colors" href="{{ url_for('main.student_profile') }}">Profile</a>
+                <a class="text-[var(--color-text-secondary)] hover:text-[var(--color-primary)] text-sm font-medium leading-normal transition-colors" href="{{ url_for('main.hostel_info') }}">Hostel Information</a>
+                <a href="{{ url_for('main.logout') }}" class="text-[var(--color-text-muted)] hover:text-red-600 transition-colors text-sm font-medium leading-normal">Logout</a>
+            </nav>
+            <div class="flex items-center gap-4">
+                
+                <button aria-label="Notifications" class="text-[var(--color-text-muted)] hover:text-[var(--color-primary)] transition-colors relative" onclick="toggleNotifications()">
+                    <span class="material-icons">notifications</span>
+                    {% if student_notifications|length > 0 %}
+                        <span class="absolute -top-1 -right-1 inline-flex items-center justify-center size-5 text-xs font-bold leading-none text-red-100 bg-red-600 rounded-full">
+                            {{ student_notifications|length }}
+                        </span>
+                    {% endif %}
+                </button>
+                <img src="{{ url_for('static', filename='profile_pics/' + (current_user.profile_picture or 'default.jpg')) }}"
+                     alt="Profile Picture"
+                     class="rounded-full size-10 border border-slate-200 object-cover"/>
+            </div>
+            <button class="md:hidden text-[var(--color-text-muted)] hover:text-[var(--color-primary)] transition-colors" id="menuButton">
+                <span class="material-icons text-3xl">menu</span>
+            </button>
+        </header>
+
+        <div id="mobileSidebar" class="fixed top-0 left-0 h-full w-64 bg-white shadow-lg z-50 transform -translate-x-full transition-transform duration-300 md:hidden">
+            <div class="p-4 border-b border-gray-200">
+                <div class="flex items-center justify-between">
+                    <p class="font-semibold text-lg text-[var(--color-text-primary)]">Menu</p>
+                    <button class="text-[var(--color-text-muted)] hover:text-[var(--color-primary)]" onclick="toggleMobileMenu()">
+                        <span class="material-icons">close</span>
+                    </button>
+                </div>
+            </div>
+            <nav class="p-4 space-y-4">
+                <a href="{{ url_for('main.dashboard') }}" class="block text-[var(--color-text-primary)] hover:text-[var(--color-primary)] font-medium">Dashboard</a>
+                <a href="{{ url_for('main.student_profile') }}" class="block text-[var(--color-text-primary)] hover:text-[var(--color-primary)] font-medium">Profile</a>
+                <a href="{{ url_for('main.hostel_info') }}" class="block text-[var(--color-text-primary)] hover:text-[var(--color-primary)] font-medium">Hostel Information</a>
+                <a href="{{ url_for('main.logout') }}" class="block text-[var(--color-text-primary)] hover:text-red-600 font-medium">Logout</a>
+            </nav>
+        </div>
+
+        <div id="notificationDropdown" class="hidden absolute right-4 md:right-10 top-16 mt-2 w-72 bg-white rounded-lg shadow-lg z-50 border border-[var(--color-border)]">
+            <div class="p-4 border-b border-[var(--color-border)]">
+                <h3 class="text-lg font-semibold text-[var(--color-text-primary)]">Notifications</h3>
+            </div>
+            <div class="max-h-60 overflow-y-auto">
+                {% if student_notifications %}
+                    {% for notification in student_notifications %}
+                        <div class="px-4 py-3 border-b last:border-b-0 border-[var(--color-border)] {% if not notification.is_read %}bg-blue-50{% endif %}">
+                            <p class="text-sm text-[var(--color-text-primary)]">{{ notification.message }}</p>
+                            <p class="text-xs text-[var(--color-text-muted)] mt-1">{{ notification.created_at.strftime('%b %d, %Y %I:%M %p') }}</p>
+                            {% if not notification.is_read %}
+                                <button class="mt-2 text-xs text-[var(--color-primary)] hover:underline" onclick="markAsRead({{ notification.id }})">Mark as Read</button>
+                            {% endif %}
+                        </div>
+                    {% endfor %}
+                {% else %}
+                    <p class="p-4 text-sm text-[var(--color-text-muted)]">No new notifications.</p>
+                {% endif %}
+            </div>
+            <div class="p-4 text-center">
+                <a href="#" class="text-[var(--color-primary)] hover:underline text-sm">View All</a>
+            </div>
+        </div>
+
+        <div class="container mx-auto px-4">
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    <div class="mb-4">
+                        {% for category, message in messages %}
+                            <br>
+                            <div class="p-4 rounded-lg text-white
+                                {% if category == 'success' %} bg-green-500
+                                {% elif category == 'error' %} bg-red-500
+                                {% else %} bg-blue-500
+                                {% endif %}">
+                                {{ message }}
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            {% endwith %}
+        </div>
+        <main class="flex flex-1 justify-center py-8 px-4 sm:px-6 lg:px-8">
+            <div class="layout-content-container w-full max-w-7xl grid grid-cols-1 md:grid-cols-3 gap-8">
+                <section class="md:col-span-1 bg-white p-6 rounded-xl shadow-sm h-fit">
+                    <h2 class="text-xl font-semibold mb-4 text-[var(--color-text-primary)]" style="text-align: center;">Student Profile</h2>
+                    <div class="flex flex-col items-center">
+                        <img src="{{ url_for('static', filename='profile_pics/' + (current_user.profile_picture or 'default.jpg')) }}"
+                             alt="Profile Picture" class="rounded-full size-24 object-cover border-4 border-[var(--color-primary)] mb-4"/>
+                        <h3 class="text-lg font-bold text-[var(--color-text-primary)]">{{ current_user.full_name }}</h3>
+                        <p class="text-[var(--color-text-secondary)] text-sm">{{ current_user.registration_number }}</p>
+                        <p class="text-[var(--color-text-secondary)] text-sm">{{ current_user.email }}</p>
+                        <a href="{{ url_for('main.edit_profile') }}" class="mt-4 text-[var(--color-primary)] hover:underline text-sm">Edit Profile</a>
+                    </div>
+                </section>
+
+                <div class="md:col-span-2 space-y-8">
+                    <section class="bg-white p-6 rounded-xl shadow-sm">
+                        <h2 class="text-xl font-semibold mb-4 text-[var(--color-text-primary)]">Overall Clearance Status</h2>
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center gap-3">
+                                <span class="material-icons text-4xl
+                                    {% if approval_percentage == 100 %} text-green-500
+                                    {% elif approval_percentage == 0 %} text-red-500
+                                    {% else %} text-yellow-500
+                                    {% endif %}">
+                                    {% if approval_percentage == 100 %} check_circle
+                                    {% elif approval_percentage == 0 %} cancel
+                                    {% else %} pending
+                                    {% endif %}
+                                </span>
+                                <div>
+                                    <p class="text-2xl font-bold text-[var(--color-text-primary)]">
+                                        {% if approval_percentage == 100 %} Approved
+                                        {% elif approval_percentage == 0 %} Pending
+                                        {% else %} In Progress
+                                        {% endif %}
+                                    </p>
+                                    <p class="text-[var(--color-text-muted)] text-sm">
+                                        {{ approved_documents_count }} of {{ total_required_documents }} documents approved
+                                    </p>
+                                </div>
+                            </div>
+                            <div class="size-20 rounded-full flex items-center justify-center font-bold text-lg
+                                {% if approval_percentage == 100 %} bg-green-100 text-green-700
+                                {% elif approval_percentage == 0 %} bg-red-100 text-red-700
+                                {% else %} bg-yellow-100 text-yellow-700
+                                {% endif %}">
+                                {{ approval_percentage | int }}%
+                            </div>
+                        </div>
+                    </section>
+                    <section class="bg-white p-6 rounded-xl shadow-sm">
+                        <h2 class="text-xl font-semibold mb-4 text-[var(--color-text-primary)]">Hostel Information</h2>
+                        <div id="hostelInfoContent">
+                            {% if has_allocated_room %}
+                                <div class="space-y-3">
+                                    <p class="text-sm text-[var(--color-text-primary)]">
+                                        <span class="font-semibold">Hostel:</span> {{ current_user.hostel }}
+                                    </p>
+                                    <p class="text-sm text-[var(--color-text-primary)]">
+                                        <span class="font-semibold">Block:</span> {{ current_user.block }}
+                                    </p>
+                                    <p class="text-sm text-[var(--color-text-primary)]">
+                                        <span class="font-semibold">Room Number:</span> {{ current_user.room_number }}
+                                    </p>
+                                </div>
+                                <div class="mt-6 text-center">
+                                    <a href="{{ url_for('main.hostel_info') }}" class="inline-flex items-center justify-center rounded-lg bg-[var(--color-primary)] px-6 py-3 text-base font-semibold text-white shadow-md transition-colors hover:bg-[var(--color-primary-hover)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)] focus:ring-offset-2">
+                                        View Full Hostel Details
+                                    </a>
+                                </div>
+                            {% else %}
+                                <p class="text-lg text-[var(--color-text-muted)] mb-4">
+                                    Your hostel room has not been allocated yet. Complete your profile before requesting an allocation.
+                                </p>
+                                <div class="mt-6 text-center">
+                                    {% if current_user.level and current_user.department and current_user.faculty and current_user.phone_number and current_user.profile_picture %}
+                                    <button id="allocateRoomBtn" type="button"
+                                        class="inline-flex items-center justify-center rounded-lg px-6 py-3 text-base font-semibold text-white shadow-md transition-colors
+                                            bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-600 focus:ring-offset-2">
+                                        <span class="material-icons mr-2">meeting_room</span>
+                                        Allocate Room Now
+                                    </button>
+                                    <p id="allocationMessage" class="mt-4 text-center text-sm text-[var(--color-text-primary)]"></p>
+                                    {% else %}
+                                    <button id="allocateRoomBtn" type="button" disabled
+                                        class="inline-flex items-center justify-center rounded-lg px-6 py-3 text-base font-semibold text-white shadow-md bg-gray-400 cursor-not-allowed">
+                                        <span class="material-icons mr-2">meeting_room</span>
+                                        Allocate Room Now
+                                    </button>
+                                    <p class="mt-2 text-sm text-red-500">Please complete your profile to enable room allocation, after that upload your documents for clearance.</p>
+                                    {% endif %}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </section>
+
+                    <section class="bg-white p-6 rounded-xl shadow-sm">
+                        <h2 class="text-xl font-semibold mb-4 text-[var(--color-text-primary)]">Documents Required for Clearance</h2>
+                        <div class="space-y-4">
+                            {% for doc in doc_statuses %}
+                                <div class="flex items-center justify-between p-3 rounded-lg border
+                                    {% if doc.status == 'verified' %} border-green-200 bg-green-50
+                                    {% elif doc.status == 'failed' %} border-red-200 bg-red-50
+                                    {% elif doc.status == 'not_uploaded' %} border-gray-200 bg-gray-50
+                                    {% else %} border-blue-200 bg-blue-50
+                                    {% endif %}">
+                                    <div class="flex items-center gap-3">
+                                        <span class="material-icons text-2xl
+                                            {% if doc.status == 'verified' %} text-green-600
+                                            {% elif doc.status == 'failed' %} text-red-600
+                                            {% elif doc.status == 'not_uploaded' %} text-gray-500
+                                            {% else %} text-blue-600
+                                            {% endif %}">
+                                            {% if doc.status == 'verified' %} check_circle
+                                            {% elif doc.status == 'failed' %} error
+                                            {% elif doc.status == 'not_uploaded' %} file_upload
+                                            {% else %} upload_file
+                                            {% endif %}
+                                        </span>
+                                        <div>
+                                            <p class="font-medium text-[var(--color-text-primary)]">{{ doc.doc_type }}</p>
+                                            <p class="text-sm text-[var(--color-text-muted)]">Status:
+                                                <span class="font-semibold
+                                                    {% if doc.status == 'verified' %} text-green-700
+                                                    {% elif doc.status == 'failed' %} text-red-700
+                                                    {% elif doc.status == 'not_uploaded' %} text-gray-700
+                                                    {% else %} text-blue-700
+                                                    {% endif %}">
+                                                    {{ doc.status | title | replace('_', ' ') }}
+                                                </span>
+                                                {% if doc.reason %}
+                                                    <span class="text-red-500 text-xs ml-2">(Reason: {{ doc.reason }})</span>
+                                                {% endif %}
+                                            </p>
+                                            <div id="{{ doc.doc_type.replace(' ', '_').lower() }}-status" class="text-sm mt-1"></div>
+                                        </div>
+                                    </div>
+                                    {% if doc.status != 'verified' %}
+                                        <div class="flex items-center gap-2">
+                                            <label class="block">
+                                                <span class="sr-only">Choose file</span>
+                                                <input type="file" name="file" id="{{ doc.doc_type.replace(' ', '_').lower() }}-file-input" class="block w-full text-sm text-slate-500
+                                                    file:mr-2 file:py-1 file:px-2
+                                                    file:rounded-full file:border-0
+                                                    file:text-sm file:font-semibold
+                                                    file:bg-blue-50 file:text-blue-700
+                                                    hover:file:bg-blue-100"/>
+                                            </label>
+                                            <button type="button" onclick="uploadDocument('{{ doc.doc_type.replace(' ', '_').lower() }}')" class="inline-flex items-center justify-center rounded-lg bg-[var(--color-primary)] px-3 py-1.5 text-sm font-semibold text-white shadow-md transition-colors hover:bg-[var(--color-primary-hover)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)] focus:ring-offset-2">
+                                                Upload
+                                            </button>
+                                        </div>
+                                    {% else %}
+                                        <span class="material-icons text-green-600">done_all</span>
+                                    {% endif %}
+                                </div>
+                            {% endfor %}
+                        </div>
+                    </section>
+
+                    
+                    <section class="bg-white p-6 rounded-xl shadow-sm text-center">
+                        <h2 class="text-xl font-semibold mb-4 text-[var(--color-text-primary)]">Your Clearance QR Code</h2>
+                        <p class="text-[var(--color-text-muted)] text-sm mb-4">Present this QR code for final clearance verification.</p>
+                        {% if qr_code_svg_data %}
+                            <div class="flex justify-center mb-4">
+                                <img src="data:image/svg+xml;base64,{{ qr_code_svg_data }}" alt="QR Code" class="size-48 border border-slate-200 p-2"/>
+                            </div>
+                            <p class="text-sm text-[var(--color-text-primary)] font-mono break-all">{{ current_user.clearance_qr_id }}</p>
+                        {% else %}
+                            <p class="text-[var(--color-text-muted)]">QR Code not available. Please refresh or contact support.</p>
+                        {% endif %}
+                    </section>
+                </div>
+            </div>
+        </main>
+        
+    </div>
+</div>
+
+<script>
+    // Flashed messages auto-hide
+    setTimeout(() => {
+        const alertBox = document.querySelector('[class*="bg-green-500"], [class*="bg-red-500"], [class*="bg-blue-500"]');
+        if (alertBox) {
+            alertBox.style.transition = "opacity 0.5s ease-out";
+            alertBox.style.opacity = 0;
+            setTimeout(() => alertBox.remove(), 500);
+        }
+    }, 3000); // 3 seconds
+
+    // Notifications Dropdown Toggle
+    function toggleNotifications() {
+        const dropdown = document.getElementById('notificationDropdown');
+        dropdown.classList.toggle('hidden');
+    }
+
+    // Mark Notification as Read via AJAX
+    function markAsRead(notificationId) {
+        fetch(`/mark_notification_read/${notificationId}`, {
+            method: 'POST',
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest', // Indicate an AJAX request
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({}) // Empty body for POST request
+        })
+        .then(response => {
+            if (response.ok) {
+                // Remove the notification element from the DOM
+                const notificationElement = document.getElementById(`notification-${notificationId}`); // You'd need to add ID to your notification div
+                if (notificationElement) {
+                    notificationElement.remove();
+                }
+                // Optionally, update the notification count
+                const notificationCountSpan = document.querySelector('.absolute.-top-1.-right-1');
+                if (notificationCountSpan) {
+                    let currentCount = parseInt(notificationCountSpan.textContent);
+                    if (currentCount > 1) {
+                        notificationCountSpan.textContent = currentCount - 1;
+                    } else {
+                        notificationCountSpan.remove(); // Hide if no more notifications
+                    }
+                }
+                // Refresh the page after a short delay to ensure everything is updated (optional, could be more dynamic)
+                setTimeout(() => window.location.reload(), 500);
+            } else {
+                console.error('Failed to mark notification as read.');
+            }
+        })
+        .catch(error => console.error('Error:', error));
+    }
+
+    // Room Allocation Script
+    document.addEventListener('DOMContentLoaded', function() {
+        const allocateRoomBtn = document.getElementById('allocateRoomBtn');
+        const hostelInfoContent = document.getElementById('hostelInfoContent');
+        
+        // Only proceed if the button exists and is not disabled
+        if (allocateRoomBtn && !allocateRoomBtn.disabled) {
+            const allocationMessage = document.getElementById('allocationMessage');
+            
+            allocateRoomBtn.addEventListener('click', function() {
+                // Disable button and show loading state
+                allocateRoomBtn.disabled = true;
+                allocateRoomBtn.innerHTML = '<span class="material-icons mr-2 animate-spin">sync</span> Allocating...';
+                allocationMessage.textContent = 'Attempting to find an available room for you...';
+                allocationMessage.classList.remove('text-red-500', 'text-green-500'); // Clear previous colors
+
+                fetch('{{ url_for("main.allocate_room") }}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    },
+                    body: JSON.stringify({}) // No data needed for allocation request
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        allocationMessage.textContent = data.message;
+                        allocationMessage.classList.add('text-green-500');
+                        // Update the Hostel Information section dynamically
+                        hostelInfoContent.innerHTML = `
+                            <div class="space-y-3">
+                                <p class="text-lg text-[var(--color-text-primary)]">
+                                    <span class="font-semibold">Hostel:</span> ${data.hostel}
+                                </p>
+                                <p class="text-lg text-[var(--color-text-primary)]">
+                                    <span class="font-semibold">Block:</span> ${data.block}
+                                </p>
+                                <p class="text-lg text-[var(--color-text-primary)]">
+                                    <span class="font-semibold">Room Number:</span> ${data.room_number}
+                                </p>
+                            </div>
+                            <div class="mt-6 text-center">
+                                <a href="{{ url_for('main.hostel_info') }}" class="inline-flex items-center justify-center rounded-lg bg-[var(--color-primary)] px-6 py-3 text-base font-semibold text-white shadow-md transition-colors hover:bg-[var(--color-primary-hover)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)] focus:ring-offset-2">
+                                    View Full Hostel Details
+                                </a>
+                            </div>
+                        `;
+                        // Optionally reload after a short delay to refresh all data (e.g., notifications)
+                        setTimeout(() => window.location.reload(), 1500);
+                    } else {
+                        allocationMessage.textContent = data.message;
+                        allocationMessage.classList.add('text-red-500');
+                        // Re-enable button
+                        allocateRoomBtn.disabled = false;
+                        allocateRoomBtn.innerHTML = '<span class="material-icons mr-2">meeting_room</span> Allocate Room Now';
+                    }
+                })
+                .catch(error => {
+                    console.error('Error during room allocation:', error);
+                    allocationMessage.textContent = 'An error occurred during allocation. Please try again.';
+                    allocationMessage.classList.add('text-red-500');
+                    // Re-enable button
+                    allocateRoomBtn.disabled = false;
+                    allocateRoomBtn.innerHTML = '<span class="material-icons mr-2">meeting_room</span> Allocate Room Now';
+                });
+            });
+        }
+    });
+
+    // NEW: AJAX Upload function
+    async function uploadDocument(docType) {
+        const fileInput = document.getElementById(docType + '-file-input');
+        const file = fileInput.files[0];
+        const statusDiv = document.getElementById(docType + '-status');
+
+        if (!file) {
+            statusDiv.innerHTML = '<span class="text-red-500">Please select a file to upload.</span>';
+            return;
+        }
+
+        const formData = new FormData();
+        formData.append('file', file);
+
+        statusDiv.innerHTML = '<span class="text-blue-500">Uploading...</span>';
+
+        try {
+            const response = await fetch(`/upload_document/${docType}`, {
+                method: 'POST',
+                body: formData,
+            });
+
+            const result = await response.json();
+
+            if (response.ok) {
+                statusDiv.innerHTML = `<span class="text-green-500">${result.message}</span>`;
+                // Clear the file input for a new upload
+                fileInput.value = '';
+                // Optional: refresh the page after a successful upload to show the new status
+                setTimeout(() => window.location.reload(), 1500);
+            } else {
+                statusDiv.innerHTML = `<span class="text-red-500">Error: ${result.message}</span>`;
+            }
+        } catch (error) {
+            console.error('Network or server error:', error);
+            statusDiv.innerHTML = '<span class="text-red-500">Network error occurred.</span>';
+        }
+    }
+
+    // New: Mobile menu toggle logic
+    const menuButton = document.getElementById('menuButton');
+    const mobileSidebar = document.getElementById('mobileSidebar');
+
+    function toggleMobileMenu() {
+        if (mobileSidebar.classList.contains('-translate-x-full')) {
+            mobileSidebar.classList.remove('-translate-x-full');
+        } else {
+            mobileSidebar.classList.add('-translate-x-full');
+        }
+    }
+    
+    if (menuButton) {
+      menuButton.addEventListener('click', toggleMobileMenu);
+    }
+</script>
+</body>
+</html>
